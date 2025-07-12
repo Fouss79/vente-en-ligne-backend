@@ -25,9 +25,9 @@ jobs:
       - name: 🚚 Copier le .jar sur la VM
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           source: "target/backend.jar"
           target: "/home/ftraore/app/backend.jar"
