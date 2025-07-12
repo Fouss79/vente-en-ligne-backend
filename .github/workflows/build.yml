@@ -1,48 +1,21 @@
-name: 🚀 Déploiement sur serveur local
+- name: 🏗️ Compiler avec Maven
+  run: mvn clean package -DskipTests
 
-on:
-  push:
-    branches: [ "main" ]
+- name: 📁 Lister les fichiers .jar générés
+  run: ls -lh target/
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+- name: 📦 Renommer le jar
+  run: |
+    JAR_NAME=$(ls target/*.jar | grep -v 'original' | head -n 1)
+    echo "Found jar: $JAR_NAME"
+    mv "$JAR_NAME" target/backend.jar
 
-    steps:
-      - name: 🔄 Récupération du code
-        uses: actions/checkout@v3
-
-      - name: ☕ Installer Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 17
-
-      - name: 🏗️ Compiler avec Maven
-        run: mvn clean package -DskipTests
-
-      - name: 📦 Renommer le fichier jar
-        run: |
-          JAR_NAME=$(ls target/*.jar | grep -v 'original' | head -n 1)
-          echo "Found jar: $JAR_NAME"
-          mv "$JAR_NAME" target/backend.jar
-
-      - name: 🚚 Copier le .jar sur la VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: "target/backend.jar"
-          target: "/home/ftraore/app/backend.jar"
-
-      - name: 🔁 Redémarrer le service distant
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            sudo systemctl restart mon-backend.service
+- name: 🚚 Copier le .jar sur la VM
+  uses: appleboy/scp-action@v0.1.7
+  with:
+    host: ${{ secrets.HOST }}
+    username: ${{ secrets.USERNAME }}
+    key: ${{ secrets.SSH_PRIVATE_KEY }}
+    port: 22
+    source: "target/backend.jar"
+    target: "/home/ftraore/app/backend.jar"
