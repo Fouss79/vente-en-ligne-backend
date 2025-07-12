@@ -1,23 +1,43 @@
-name: Construction du backend Spring Boot
+# .github/workflows/deploiement.yml
+name: 🚀 Déploiement sur serveur local
 
 on:
   push:
-    branches: [ "main", "developpe" ]
+    branches: [ "main" ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🧾 Cloner le dépôt
-        uses: actions/checkout@v4
+      - name: 🔄 Récupération du code
+        uses: actions/checkout@v3
 
       - name: ☕ Installer Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          java-version: '17'
           distribution: 'temurin'
-          cache: maven
+          java-version: 17
 
-      - name: ⚙️ Compiler avec Maven
-        run: mvn -DskipTests=true -B package --file pom.xml
+      - name: 🏗️ Compiler avec Maven
+        run: mvn clean package -DskipTests
+
+      - name: 🚚 Copier le .jar sur la VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          source: "target/backend.jar"
+          target: "/home/ftraore/app/backend.jar"
+
+      - name: 🔁 Redémarrer le service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
+            sudo systemctl restart mon-backend.service
