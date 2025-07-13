@@ -24,22 +24,13 @@ jobs:
       - name: 📁 Lister les fichiers .jar générés
         run: ls -lh target/
 
-      - name: 📦 Renommer le jar
+      - name: 📦 Renommer automatiquement le jar
         run: |
           JAR_NAME=$(ls target/*.jar | grep -v 'original' | head -n 1)
-          echo "Fichier jar détecté : $JAR_NAME"
+          echo "Found jar: $JAR_NAME"
           mv "$JAR_NAME" target/backend.jar
 
-      - name: ✅ Vérifier que le jar est bien généré
-        run: |
-          if [ -f target/backend.jar ]; then
-            echo "✅ JAR prêt pour déploiement."
-          else
-            echo "❌ Le fichier JAR n'existe pas. Échec du build."
-            exit 1
-          fi
-
-      - name: 🚚 Copier le jar sur le serveur distant
+      - name: 🚚 Copier le .jar sur la VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
@@ -49,7 +40,7 @@ jobs:
           source: "target/backend.jar"
           target: "/home/ftraore/app/backend.jar"
 
-      - name: 🔁 Redémarrer le service distant
+      - name: 🔁 Redémarrer le service
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -58,4 +49,3 @@ jobs:
           port: 22
           script: |
             sudo systemctl restart mon-backend.service
-            echo "✅ Service redémarré avec succès."
